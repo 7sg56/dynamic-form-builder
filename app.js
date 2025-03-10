@@ -4,7 +4,6 @@ const ejsMate = require('ejs-mate');
 const bodyParser = require('body-parser');
 const path = require('path');
 const methodOverride = require('method-override');
-const session = require('express-session');
 const formRoutes = require('./routes/forms');
 
 const app = express();
@@ -29,24 +28,13 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(methodOverride('_method'));
 
-app.use(session({
-    secret: 'thisshouldbeabettersecret',
-    resave: false,
-    saveUninitialized: true,
-    cookie: {
-        httpOnly: true,
-        expires: Date.now() + 1000 * 60 * 60 * 24 * 7,
-        maxAge: 1000 * 60 * 60 * 24 * 7
-    }
-}));
-
 app.use('/', formRoutes);
 
 app.get('/', (req, res) => {
     res.render('index');
 });
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3001; 
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
 });
