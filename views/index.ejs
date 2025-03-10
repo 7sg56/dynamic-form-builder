@@ -1,0 +1,75 @@
+<% layout('layouts/boilerplate') %>
+
+<div class="row">
+    <div class="col-md-8 offset-md-2">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h2 class="card-title">Create a New Form</h2>
+            </div>
+            <div class="card-body">
+                <form id="formBuilder">
+                    <div class="mb-3">
+                        <label for="formTitle" class="form-label">Form Title:</label>
+                        <input type="text" class="form-control" id="formTitle" name="formTitle" required>
+                    </div>
+
+                    <div id="questionsContainer">
+                    </div>
+
+                    <div class="mb-3 mt-4">
+                        <button type="button" id="addQuestion" class="btn btn-success">+ Add Question</button>
+                    </div>
+
+                    <div class="d-grid gap-2 mt-4">
+                        <button type="submit" class="btn btn-primary">Create Form</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<template id="questionTemplate">
+    <div class="question-block card mb-3">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5>Question</h5>
+            <button type="button" class="btn btn-danger btn-sm remove-question">Remove</button>
+        </div>
+        <div class="card-body">
+            <div class="mb-3">
+                <label class="form-label">Question Text:</label>
+                <input type="text" class="form-control question-text" required>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Question Type:</label>
+                <select class="form-select question-type">
+                    <option value="shortText">Short Text</option>
+                    <option value="longText">Long Text</option>
+                    <option value="multipleChoice">Multiple Choice</option>
+                    <option value="email">Email</option>
+                    <option value="statement">Statement (No Input)</option>
+                </select>
+            </div>
+            <div class="options-container d-none">
+                <label class="form-label">Options:</label>
+                <div class="options-list mb-2">
+                    <div class="input-group mb-2">
+                        <input type="text" class="form-control option-text" placeholder="Option text">
+                        <button type="button" class="btn btn-outline-danger remove-option">Remove</button>
+                    </div>
+                </div>
+                <button type="button" class="btn btn-outline-secondary btn-sm add-option">+ Add Option</button>
+            </div>
+        </div>
+    </div>
+</template>
+
+<template id="optionTemplate">
+    <div class="input-group mb-2">
+        <input type="text" class="form-control option-text" placeholder="Option text">
+        <button type="button" class="btn btn-outline-danger remove-option">Remove</button>
+    </div>
+</template>
+
+<% block('script') %>
+<script src="/js/formBuilder.js"></script>

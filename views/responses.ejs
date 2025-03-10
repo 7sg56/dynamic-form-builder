@@ -1,0 +1,79 @@
+<% layout('layouts/boilerplate') %>
+
+<div class="row mb-4">
+    <div class="col-md-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="/">Home</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Form Responses</li>
+            </ol>
+        </nav>
+        
+        <div class="d-flex justify-content-between align-items-center">
+            <h1><%= formTitle %> - Responses</h1>
+            <a href="/<%= formId %>" class="btn btn-primary">View Form</a>
+        </div>
+    </div>
+</div>
+
+<% if (responses.length === 0) { %>
+    <div class="alert alert-info">
+        <h4>No Responses Yet</h4>
+        <p>No one has submitted a response to this form yet.</p>
+    </div>
+<% } else { %>
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="card-title">Response Summary</h3>
+                </div>
+                <div class="card-body">
+                    <p><strong>Total Responses:</strong> <%= responses.length %></p>
+                    <p><strong>Latest Response:</strong> <%= new Date(responses[0].createdAt).toLocaleString() %></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <% responses.forEach((response, index) => { %>
+        <div class="card mb-4">
+            <div class="card-header bg-light">
+                <h4>Response #<%= index + 1 %> <small class="text-muted">(<%= new Date(response.createdAt).toLocaleString() %>)</small></h4>
+            </div>
+            <div class="card-body">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th style="width: 40%">Question</th>
+                            <th>Response</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% response.responses.forEach(questionResponse => { %>
+                            <tr>
+                                <td>
+                                    <strong><%= questionResponse.questionText %></strong>
+                                    <br>
+                                    <small class="text-muted"><%= questionResponse.questionType %></small>
+                                </td>
+                                <td>
+                                    <% if (questionResponse.questionType === 'multipleChoice') { %>
+                                        <%= questionResponse.answer %>
+                                        <small class="text-muted d-block">
+                                            Available options: <%= questionResponse.options.join(', ') %>
+                                        </small>
+                                    <% } else if (questionResponse.questionType === 'statement') { %>
+                                        <i>Statement - No response required</i>
+                                    <% } else { %>
+                                        <%= questionResponse.answer %>
+                                    <% } %>
+                                </td>
+                            </tr>
+                        <% }) %>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    <% }) %>
+<% } %>

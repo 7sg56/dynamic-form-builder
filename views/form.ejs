@@ -1,0 +1,193 @@
+<% layout('layouts/boilerplate') %>
+
+<div class="row">
+    <div class="col-md-8 offset-md-2">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h2 class="card-title" id="displayFormTitle"><%= formTitle || 'Loading Form...' %></h2>
+            </div>
+            <div class="card-body">
+                <form id="responseForm">
+                    <input type="hidden" id="formId" value="<%= formId %>">
+                    <div id="formQuestions" class="mb-4">
+                        <!-- Questions will be loaded here -->
+                        <div class="text-center" id="loadingIndicator">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            <p class="mt-2">Loading form questions...</p>
+                        </div>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary">Submit Response</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<% block('script') %>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const formId = document.getElementById('formId').value;
+        const formQuestionsContainer = document.getElementById('formQuestions');
+        const loadingIndicator = document.getElementById('loadingIndicator');
+        const displayFormTitle = document.getElementById('displayFormTitle');
+        const responseForm = document.getElementById('responseForm');
+        
+        const formData = JSON.parse(localStorage.getItem(`form_${formId}`));
+        
+        if (formData) {
+            displayFormTitle.textContent = formData.formTitle;
+            loadingIndicator.remove();
+            
+            formData.questions.forEach((question, index) => {
+                const questionDiv = document.createElement('div');
+                questionDiv.className = 'mb-4';
+                questionDiv.dataset.questionId = question.id;
+                questionDiv.dataset.questionType = question.type;
+                
+                const label = document.createElement('label');
+                label.className = 'form-label';
+                label.textContent = question.text;
+                questionDiv.appendChild(label);
+                
+                switch (question.type) {
+                    case 'shortText':
+                        const shortInput = document.createElement('input');
+                        shortInput.type = 'text';
+                        shortInput.className = 'form-control';
+                        shortInput.name = `q_${question.id}`;
+                        shortInput.required = true;
+                        questionDiv.appendChild(shortInput);
+                        break;
+                        
+                    case 'longText':
+                        const textarea = document.createElement('textarea');
+                        textarea.className = 'form-control';
+                        textarea.name = `q_${question.id}`;
+                        textarea.rows = 3;
+                        textarea.required = true;
+                        questionDiv.appendChild(textarea);
+                        break;
+                        
+                    case 'email':
+                        const emailInput = document.createElement('input');
+                        emailInput.type = 'email';
+                        emailInput.className = 'form-control';
+                        emailInput.name = `q_${question.id}`;
+                        emailInput.required = true;
+                        questionDiv.appendChild(emailInput);
+                        break;
+                        
+                    case 'multipleChoice':
+                        const optionsDiv = document.createElement('div');
+                        optionsDiv.className = 'mt-2';
+                        
+                        question.options.forEach((option, optIndex) => {
+                            const optionDiv = document.createElement('div');
+                            optionDiv.className = 'form-check';
+                            
+                            const radio = document.createElement('input');
+                            radio.type = 'radio';
+                            radio.className = 'form-check-input';
+                            radio.name = `q_${question.id}`;
+                            radio.id = `q_${question.id}_opt_${optIndex}`;
+                            radio.value = option;
+                            radio.required = true;
+                            
+                            const optionLabel = document.createElement('label');
+                            optionLabel.className = 'form-check-label';
+                            optionLabel.htmlFor = `q_${question.id}_opt_${optIndex}`;
+                            optionLabel.textContent = option;
+                            
+                            optionDiv.appendChild(radio);
+                            optionDiv.appendChild(optionLabel);
+                            optionsDiv.appendChild(optionDiv);
+                        });
+                        
+                        questionDiv.appendChild(optionsDiv);
+                        break;
+                        
+                    case 'statement':
+                        const statement = document.createElement('p');
+                        statement.className = 'form-text';
+                        statement.textContent = question.text;
+                        questionDiv.innerHTML = '';
+                        questionDiv.appendChild(statement);
+                        break;
+                }
+                
+                formQuestionsContainer.appendChild(questionDiv);
+            });
+        } else {
+            loadingIndicator.innerHTML = `
+                <div class="alert alert-warning">
+                    <h4>Form Not Found</h4>
+                    <p>This form either doesn't exist or hasn't been created yet.</p>
+                    <a href="/" class="btn btn-primary mt-2">Create a New Form</a>
+                </div>
+            `;
+        }
+        
+        responseForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            if (!formData) {
+                alert('Form data not found');
+                return;
+            }
+            
+            const responses = [];
+            formData.questions.forEach(question => {
+                if (question.type === 'statement') return;
+                
+                const questionElement = document.querySelector(`[data-question-id="${question.id}"]`);
+                let answer;
+                
+                if (question.type === 'multipleChoice') {
+                    const selectedOption = document.querySelector(`input[name="q_${question.id}"]:checked`);
+                    answer = selectedOption ? selectedOption.value : null;
+                } else {
+                    const inputElement = document.querySelector(`[name="q_${question.id}"]`);
+                    answer = inputElement ? inputElement.value : null;
+                }
+                
+                responses.push({
+                    questionId: question.id,
+                    questionText: question.text,
+                    questionType: question.type,
+                    answer: answer,
+                    options: question.type === 'multipleChoice' ? question.options : []
+                });
+            });
+            
+            try {
+                const response = await fetch('/submit', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        formId: formId,
+                        formTitle: formData.formTitle,
+                        responses: responses
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    window.location.href = `/${formId}/thanks`;
+                } else {
+                    alert('Error submitting form: ' + result.message);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error submitting form. Please try again.');
+            }
+        });
+    });
+</script>

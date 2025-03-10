@@ -1,0 +1,17 @@
+<% layout('layouts/boilerplate') %>
+
+<div class="row">
+    <div class="col-md-8 offset-md-2 text-center">
+        <div class="card">
+            <div class="card-body">
+                <h1 class="card-title text-success mb-4">Thank You!</h1>
+                <p class="card-text">Your response has been successfully submitted.</p>
+                
+                <div class="mt-4">
+                    <a href="/<%= formId %>" class="btn btn-outline-primary me-2">Submit Another Response</a>
+                    <a href="/<%= formId %>/responses" class="btn btn-outline-success">View All Responses</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
